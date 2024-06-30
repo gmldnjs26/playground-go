@@ -26,15 +26,31 @@ func main() {
 	// name[3] = "천"
 	// name[4] = "재"
 	// fmt.Println(name)
+
 	// slice := []string{"gwak", "heewon", "won"}
 	// slice = append(slice, "천")
 	// slice = append(slice, "재")
+	// slice = append(slice, "다")
 	// fmt.Println(slice)
 
-	// maptest := map[string]string{"name": "heewon", "age": "23"}
-	// for key, value := range maptest {
+	// map_test := map[string]string{"name": "heewon", "age": "23"}
+	// for key, value := range map_test {
 	// 	fmt.Println(key, value)
 	// }
+
+	// type person struct {
+	// 	name    string
+	// 	age     int
+	// 	favFood []string
+	// }
+
+	// favFood := []string{"bread", "chicken"}
+	// heewon := person{
+	// 	name:    "heewon",
+	// 	age:     23,
+	// 	favFood: favFood,
+	// }
+	// fmt.Println(heewon)
 
 	// account := banking.NewAccount("heewon")
 	// account.Deposit(10)
