@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 )
 
 func multiply(a int, b int) int {
@@ -11,6 +12,11 @@ func multiply(a int, b int) int {
 func variableArgs(str ...string) {
 	defer fmt.Println("is done!")
 	fmt.Println(str)
+}
+
+type result struct {
+	url    string
+	status string
 }
 
 func main() {
@@ -79,4 +85,44 @@ func main() {
 	// } else {
 	// 	fmt.Println(err3)
 	// }
+
+	results := make(map[string]string)
+	urls := []string{
+		"https://www.airbnb.com/",
+		"https://www.google.com/",
+		"https://www.amazon.com/",
+		"https://www.reddit.com/",
+		"https://www.goo2gle.com/",
+		"https://soundcloud.com/",
+		"https://www.fac2ebook.com/",
+		"https://www.instagram.com/",
+		"https://academy.nomadcoders.com/",
+	}
+
+	c := make(chan result)
+
+	for _, url := range urls {
+		go hitUrl(url, c)
+	}
+
+	for result := range c {
+		results[result.url] = result.status
+	}
+
+	for url, result := range results {
+		fmt.Println(url, result)
+	}
+}
+
+func hitUrl(url string, c chan<- result) {
+	fmt.Println("Checking.. ", url)
+	status := "OK"
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode >= 400 {
+		status = "Failed"
+	}
+	c <- result{
+		url:    url,
+		status: status,
+	}
 }
