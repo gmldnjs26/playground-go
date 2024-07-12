@@ -1,8 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func multiply(a int, b int) int {
@@ -86,31 +92,130 @@ func main() {
 	// 	fmt.Println(err3)
 	// }
 
-	results := make(map[string]string)
-	urls := []string{
-		"https://www.airbnb.com/",
-		"https://www.google.com/",
-		"https://www.amazon.com/",
-		"https://www.reddit.com/",
-		"https://www.goo2gle.com/",
-		"https://soundcloud.com/",
-		"https://www.fac2ebook.com/",
-		"https://www.instagram.com/",
-		"https://academy.nomadcoders.com/",
+	// results := make(map[string]string)
+	// urls := []string{
+	// 	"https://www.airbnb.com/",
+	// 	"https://www.google.com/",
+	// 	"https://www.amazon.com/",
+	// 	"https://www.reddit.com/",
+	// 	"https://www.goo2gle.com/",
+	// 	"https://soundcloud.com/",
+	// 	"https://www.fac2ebook.com/",
+	// 	"https://www.instagram.com/",
+	// 	"https://academy.nomadcoders.com/",
+	// }
+
+	// c := make(chan result)
+
+	// for _, url := range urls {
+	// 	go hitUrl(url, c)
+	// }
+
+	// for result := range c {
+	// 	results[result.url] = result.status
+	// }
+
+	// for url, result := range results {
+	// 	fmt.Println(url, result)
+	// }
+
+	// 치이카와 재입고 페이지에서 재입고된 상품명 가격 품절여부 가져오기
+	var baseUrl string = "https://chiikawamarket.jp/collections/restock"
+	ps, err := getPageListInfo(baseUrl)
+	if err == nil {
+		fmt.Println(ps)
+	}
+}
+
+// func getTotalPageCount(url string) int {
+// 	res, err := http.Get(url)
+// 	checkErr(err)
+// 	checkStatusCode(res)
+
+// 	defer res.Body.Close()
+
+// 	doc, err := goquery.NewDocumentFromReader(res.Body)
+// 	checkErr(err)
+
+// 	doc.Find(".pagination--number").Each(func(i int, s *goquery.Selection) {
+// 		fmt.Println(s.Html())
+// 	})
+
+// 	return 0
+// }
+
+type ProductInfo struct {
+	name     string
+	price    string
+	hasStock bool
+}
+
+func getPageListInfo(url string) ([]ProductInfo, error) {
+	ps := []ProductInfo{}
+	c := make(chan []ProductInfo)
+
+	for i := 1; i <= 3; i++ {
+		go getPageInfo(url+"?page="+strconv.Itoa(i), c)
 	}
 
-	c := make(chan result)
-
-	for _, url := range urls {
-		go hitUrl(url, c)
+	for i := 0; i < 3; i++ {
+		p := <-c
+		fmt.Println(p)
+		ps = append(ps, p...)
 	}
 
-	for result := range c {
-		results[result.url] = result.status
+	return ps, nil
+}
+
+func getPageInfo(url string, c chan<- []ProductInfo) error {
+	temp := []ProductInfo{}
+	res, err := http.Get(url)
+	checkErr(err)
+	checkStatusCode(res)
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+
+	if err != nil {
+		return err
 	}
 
-	for url, result := range results {
-		fmt.Println(url, result)
+	selection := doc.Find(".product--root")
+	if selection.Length() == 0 {
+		return errors.New("no page")
+	} else {
+		selection.Each(func(i int, s *goquery.Selection) {
+			temp = append(temp, getProductInfo(s))
+		})
+	}
+	c <- temp
+	defer res.Body.Close()
+
+	return nil
+}
+
+func getProductInfo(s *goquery.Selection) ProductInfo {
+	name := s.Find(".product_name").Text()
+	price := s.Find(".product_price").Text()
+	label := s.Find(".product--label").Text()
+	hasStock := true
+	if label == "売り切れ" {
+		hasStock = false
+	}
+	return ProductInfo{
+		name:     strings.TrimSpace(name),
+		price:    strings.TrimSpace(price),
+		hasStock: hasStock,
+	}
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func checkStatusCode(res *http.Response) {
+	if res.StatusCode != 200 {
+		log.Fatalln("failed")
 	}
 }
 
