@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -167,29 +166,19 @@ func getPageListInfo(url string) ([]ProductInfo, error) {
 	return ps, nil
 }
 
-func getPageInfo(url string, c chan<- []ProductInfo) error {
+func getPageInfo(url string, c chan<- []ProductInfo) {
 	temp := []ProductInfo{}
 	res, err := http.Get(url)
 	checkErr(err)
 	checkStatusCode(res)
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 
-	if err != nil {
-		return err
-	}
-
 	selection := doc.Find(".product--root")
-	if selection.Length() == 0 {
-		return errors.New("no page")
-	} else {
-		selection.Each(func(i int, s *goquery.Selection) {
-			temp = append(temp, getProductInfo(s))
-		})
-	}
+	selection.Each(func(i int, s *goquery.Selection) {
+		temp = append(temp, getProductInfo(s))
+	})
 	c <- temp
 	defer res.Body.Close()
-
-	return nil
 }
 
 func getProductInfo(s *goquery.Selection) ProductInfo {
