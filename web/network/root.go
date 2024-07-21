@@ -1,35 +1,25 @@
 package network
 
-import "github.com/gin-gonic/gin"
+import (
+	"web/service"
+
+	"github.com/gin-gonic/gin"
+)
 
 type Network struct {
-	engine *gin.Engine
+	engine  *gin.Engine
+	service *service.Service
 }
 
-func NewNetwork() *Network {
+func NewNetwork(service *service.Service) *Network {
 	n := &Network{
-		engine: gin.New(),
+		engine:  gin.New(),
+		service: service,
 	}
-	newUserRouter(n)
+	newUserRouter(n, service.User)
 	return n
 }
 
 func (n *Network) ServerStart(port string) error {
 	return n.engine.Run(port)
-}
-
-func (n *Network) registerGET(path string, handler ...gin.HandlerFunc) gin.IRoutes {
-	return n.engine.GET(path, handler...)
-}
-
-func (n *Network) registerPOST(path string, handler ...gin.HandlerFunc) gin.IRoutes {
-	return n.engine.POST(path, handler...)
-}
-
-func (n *Network) registerPUT(path string, handler ...gin.HandlerFunc) gin.IRoutes {
-	return n.engine.PUT(path, handler...)
-}
-
-func (n *Network) registerDELETE(path string, handler ...gin.HandlerFunc) gin.IRoutes {
-	return n.engine.DELETE(path, handler...)
 }

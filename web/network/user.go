@@ -2,6 +2,8 @@ package network
 
 import (
 	"sync"
+	"web/service"
+	"web/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,13 +14,15 @@ var (
 )
 
 type userRouter struct {
-	router *Network
+	router  *Network
+	service *service.User
 }
 
-func newUserRouter(router *Network) *userRouter {
+func newUserRouter(router *Network, userService *service.User) *userRouter {
 	userRouterInit.Do(func() {
 		userRouterInstance = &userRouter{
-			router: router,
+			router:  router,
+			service: userService,
 		}
 
 		router.registerPOST("/user", userRouterInstance.create)
@@ -31,11 +35,14 @@ func newUserRouter(router *Network) *userRouter {
 }
 
 func (u *userRouter) create(c *gin.Context) {
-
+	c.JSON(200, "success")
 }
 
 func (u *userRouter) get(c *gin.Context) {
-
+	u.router.okResponse(c, &types.UserResponse{
+		ApiResponse: types.NewApiResponse(1, "Success"),
+		User:        types.User{},
+	})
 }
 
 func (u *userRouter) update(c *gin.Context) {
