@@ -15,10 +15,10 @@ var (
 
 type userRouter struct {
 	router  *Network
-	service *service.User
+	service *service.UserService
 }
 
-func newUserRouter(router *Network, userService *service.User) *userRouter {
+func newUserRouter(router *Network, userService *service.UserService) *userRouter {
 	userRouterInit.Do(func() {
 		userRouterInstance = &userRouter{
 			router:  router,
@@ -35,20 +35,62 @@ func newUserRouter(router *Network, userService *service.User) *userRouter {
 }
 
 func (u *userRouter) create(c *gin.Context) {
-	c.JSON(200, "success")
+	var req types.CreateUserRequest
+
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		u.router.failedResponse(c, &types.CreateUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else if err = u.service.Create(&types.User{Name: req.Name, Age: req.Age}); err != nil {
+		u.router.failedResponse(c, &types.CreateUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else {
+		u.router.okResponse(c, &types.CreateUserResponse{
+			ApiResponse: types.NewApiResponse(1, "Success"),
+		})
+	}
 }
 
 func (u *userRouter) get(c *gin.Context) {
-	u.router.okResponse(c, &types.UserResponse{
+	u.router.okResponse(c, &types.GetUserResponse{
 		ApiResponse: types.NewApiResponse(1, "Success"),
-		User:        types.User{},
+		Users:       u.service.Get(),
 	})
 }
 
 func (u *userRouter) update(c *gin.Context) {
+	var req types.UpdateUserRequest
 
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		u.router.failedResponse(c, &types.UpdateUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else if err = u.service.Update(req.Name, req.UpdateAge); err != nil {
+		u.router.failedResponse(c, &types.UpdateUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else {
+		u.router.okResponse(c, &types.UpdateUserResponse{
+			ApiResponse: types.NewApiResponse(1, "Success"),
+		})
+	}
 }
 
 func (u *userRouter) delete(c *gin.Context) {
+	var req types.DeleteUserRequest
 
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		u.router.failedResponse(c, &types.DeleteUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else if err = u.service.Delete(req.Name); err != nil {
+		u.router.failedResponse(c, &types.DeleteUserResponse{
+			ApiResponse: types.NewApiResponse(-1, err.Error()),
+		})
+	} else {
+		u.router.okResponse(c, &types.DeleteUserResponse{
+			ApiResponse: types.NewApiResponse(1, "Success"),
+		})
+	}
 }

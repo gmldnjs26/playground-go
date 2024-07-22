@@ -5,7 +5,7 @@ import (
 )
 
 type Repository struct {
-	User *UserRepository
+	UserRepository *UserRepository
 }
 
 var (
@@ -16,7 +16,7 @@ var (
 func NewRepository() *Repository {
 	repositoryInit.Do(func() {
 		repositoryInstance = &Repository{
-			User: newUserRepository(),
+			UserRepository: newUserRepository(),
 		}
 	})
 	return repositoryInstance

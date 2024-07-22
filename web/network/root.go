@@ -16,7 +16,7 @@ func NewNetwork(service *service.Service) *Network {
 		engine:  gin.New(),
 		service: service,
 	}
-	newUserRouter(n, service.User)
+	newUserRouter(n, service.UserService)
 	return n
 }
 
